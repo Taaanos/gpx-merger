@@ -1,32 +1,25 @@
-package main_test
+package main
 
 import (
 	"io/ioutil"
 	"testing"
 
 	"github.com/go-test/deep"
+	"github.com/tkrajina/gpxgo/gpx"
 )
 
-type T struct {
-	Name string
-
-	Numbers []float64
-}
-
 func TestMergeGpx(t *testing.T) {
-	// TODO: create mocks and use testify
+	path1 := "./mocks/mockRoute1.gpx"
+	path2 := "./mocks/mockRoute2.gpx"
+
 	// GIVEN
-	// mockRoutes
+	mMerged, _ := ioutil.ReadFile("./mocks/mockMerged.gpx")
 
 	// WHEN
-	// call MergeGPX with those routes
+	merged := MergeGpx([]string{path1, path2}, []*gpx.GPX{readAndParse(path1), readAndParse(path2)})
 
 	// THEN
-	// expect the mock and the generated to be equal
-	generated, _ := ioutil.ReadFile("./merged.gpx")
-	mock, _ := ioutil.ReadFile("./mockMerged.gpx")
-
-	if diff := deep.Equal(generated, mock); diff != nil {
+	if diff := deep.Equal(merged, mMerged); diff != nil {
 		t.Error(diff)
 	}
 }

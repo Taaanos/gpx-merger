@@ -9,7 +9,7 @@ import (
 )
 
 // MergeGpx merges gpx files with a descending date order
-func MergeGpx(path []string, gpxFiles []*gpx.GPX) int {
+func MergeGpx(path []string, gpxFiles []*gpx.GPX) []byte {
 	gpxMerged := gpx.GPX{}
 
 	if gpxFiles[0].TimeBounds().StartTime.Before(gpxFiles[1].TimeBounds().StartTime) {
@@ -22,14 +22,7 @@ func MergeGpx(path []string, gpxFiles []*gpx.GPX) int {
 
 	xmlBytes, err := gpxMerged.ToXml(gpx.ToXmlParams{Version: "1.1", Indent: true})
 	check(err)
-	f, err := os.Create("./merged.gpx")
-	check(err)
-	defer f.Close()
-
-	n, err := f.Write(xmlBytes)
-	check(err)
-
-	return n
+	return xmlBytes
 }
 
 func readAndParse(path string) *gpx.GPX {
@@ -40,9 +33,17 @@ func readAndParse(path string) *gpx.GPX {
 	return gpxFile
 }
 
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
 func main() {
 	// TODO: option to merge all *.gpx files from dir
 	paths := []string{}
+	gpxFiles := []*gpx.GPX{}
+
 	if len(os.Args) == 1 {
 		paths = []string{"./route1.gpx", "./route2.gpx"}
 	} else {
@@ -50,16 +51,17 @@ func main() {
 			paths = append(paths, os.Args[i])
 		}
 	}
-	gpxFiles := []*gpx.GPX{}
+
 	for i := 0; i < len(paths); i++ {
 		gpxFiles = append(gpxFiles, readAndParse(paths[i]))
 	}
-	n := MergeGpx(paths, gpxFiles)
-	fmt.Printf("wrote %d bytes\n", n)
-}
+	mergedXmlBytes := MergeGpx(paths, gpxFiles)
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
+	f, err := os.Create("./merged.gpx")
+	check(err)
+	defer f.Close()
+
+	n, err := f.Write(mergedXmlBytes)
+	check(err)
+	fmt.Printf("wrote %d bytes\n", n)
 }
